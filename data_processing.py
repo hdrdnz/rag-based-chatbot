@@ -1,3 +1,4 @@
+
 from datasets import load_dataset
 import logging
 from typing import List
@@ -112,39 +113,63 @@ def explore_dataset(dataset):
         print(f"\nVeri seti analizi tamamlandı!")
         
     except Exception as e:
-        logger.error(f"Veri seti keşfedilirken hata: {e}")
+        logger.error(f"Veri !seti keşfedilirken hata: {e}")
         print(f"Hata: {e}")
 
-def create_documents(dataset, max_samples: int = 2000):
+def create_documents(dataset, max_samples=None):
     """
     Yeni veri setinden LangChain Document'ları oluşturur
     
     Args:
         dataset: HuggingFace dataset objesi (turkish-hospital-medical-articles)
-        max_samples (int): Maksimum işlenecek makale sayısı
+        max_samples (int, optional): Maksimum işlenecek makale sayısı. None ise tüm veri işlenir
         
     Returns:
         List[Document]: LangChain Document listesi
     """
     try:
-        logger.info(f"Document'lar oluşturuluyor (maksimum {max_samples} makale)...")
+        if max_samples is None:
+            logger.info("Document'lar oluşturuluyor (TÜM VERİ)...")
+        else:
+            logger.info(f"Document'lar oluşturuluyor (maksimum {max_samples} makale)...")
         
         documents = []
         total_articles = 0
+        skipped_articles = 0
         
         for hospital_name in dataset.keys():
             hospital_data = dataset[hospital_name]
-            hospital_articles = min(len(hospital_data), max_samples // len(dataset.keys()))
+            
+            if max_samples is None:
+                hospital_articles = len(hospital_data)  # Tüm veri
+            else:
+                hospital_articles = min(len(hospital_data), max_samples // len(dataset.keys()))
             
             logger.info(f"{hospital_name}: {hospital_articles} makale işleniyor...")
             
             for i in range(hospital_articles):
                 article = hospital_data[i]
                 
+                # İLK BAŞTA KONTROL ET - ÇOK DAHA MANTIKLI!
+                text_content = article.get('text', '')
+                title = article.get('title', f'Başlıksız {i+1}')
+                
+                # Boş text kontrolü - İLK BAŞTA!
+                if not text_content or text_content is None or text_content.strip() == '':
+                    logger.warning(f"Boş içerik atlandı: {title}")
+                    skipped_articles += 1
+                    continue
+                
+                # Kısa text kontrolü - İLK BAŞTA!
+                if len(text_content.strip()) < 50:
+                    logger.warning(f"Çok kısa içerik atlandı: {title} (Uzunluk: {len(text_content)})")
+                    skipped_articles += 1
+                    continue
+                
                 content = f"""
-Başlık: {article['title']}
+Başlık: {title}
 
-İçerik: {article['text']}
+İçerik: {text_content}
 
 Kaynak: {hospital_name}
 Yayın Tarihi: {article.get('publish_date', 'Bilinmiyor')}
@@ -154,27 +179,30 @@ Yayın Tarihi: {article.get('publish_date', 'Bilinmiyor')}
                     page_content=content.strip(),
                     metadata={
                         'source': hospital_name,
-                        'title': article['title'],
+                        'title': title,
                         'publish_date': article.get('publish_date', 'Bilinmiyor'),
                         'url': article.get('url', ''),
-                        'article_id': i
+                        'article_id': i,
+                        'content_length': len(text_content)
                     }
                 )
-                
                 documents.append(doc)
                 total_articles += 1
                 
-            if total_articles >= max_samples:
+                if max_samples is not None and total_articles >= max_samples:
+                    logger.info(f"Max samples ({max_samples}) limitine ulaşıldı, işlem durduruluyor...")
                     break
             
-            if total_articles >= max_samples:
+            if max_samples is not None and total_articles >= max_samples:
                 break
         
         logger.info(f"Toplam {len(documents)} document oluşturuldu")
+        logger.info(f"{skipped_articles} makale atlandı (boş/kısa içerik)")
+        if total_articles + skipped_articles > 0:
+            logger.info(f"Başarı oranı: {len(documents)/(len(documents)+skipped_articles)*100:.1f}%")
+        
         return documents
         
     except Exception as e:
         logger.error(f"Document oluşturulurken hata: {e}")
         raise
-
-

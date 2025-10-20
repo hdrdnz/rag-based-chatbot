@@ -7,7 +7,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def create_vector_store(documents: List[Document], embedding_model, collection_name: str = "medical_qa"):
+def create_vector_store(documents: List[Document], embedding_model, collection_name: str = "medical"):
     """
     ChromaDB vector store oluşturur ve KALICI olarak kaydeder
     
@@ -34,7 +34,7 @@ def create_vector_store(documents: List[Document], embedding_model, collection_n
         logger.error(f"Vector store oluşturulurken hata oluştu: {e}")
         raise
 
-def get_vector_store(embedding_model, collection_name: str = "medical_qa"):
+def get_vector_store(embedding_model, collection_name: str = "medical"):
     """
     Mevcut vector store'u yükler (KALICI kayıttan)
     
@@ -61,26 +61,21 @@ def get_vector_store(embedding_model, collection_name: str = "medical_qa"):
         logger.error(f"Vector store yüklenirken hata oluştu: {e}")
         raise
 
-def check_vector_store_exists(collection_name: str = "medical_qa"):
+def check_vector_store_exists(collection_name: str = "medical"):
     """
     Vector store'un mevcut olup olmadığını kontrol eder
-    
-    Args:
-        collection_name (str): Collection adı
-        
-    Returns:
-        bool: Vector store mevcut mu?
     """
     try:
         base_path = "./chroma_db"
-        collection_path = os.path.join(base_path, "medical_qa")
-
+        
         if not os.path.exists(base_path):
             logger.info(f"Vector store mevcut değil: {base_path}")
             return False
-        required_files = ["chroma.sqlite3", "index.bin"]
+        
+        # Sadece chroma.sqlite3 dosyasını kontrol et
+        required_files = ["chroma.sqlite3"]
         for file in required_files:
-            file_path = os.path.join(collection_path, file)
+            file_path = os.path.join(base_path, file)
             if not os.path.exists(file_path):
                 logger.info(f"Gerekli dosya eksik: {file_path}")
                 return False
@@ -141,25 +136,17 @@ def get_collection_info(vector_store):
         logger.error(f"Collection bilgisi alınırken hata oluştu: {e}")
         return {"error": str(e)}
 
-def get_vector_store_size(collection_name: str = "medical_qa"):
+def get_vector_store_size(collection_name: str = "medical"):
     """
     Vector store dosya boyutunu döndürür
-    
-    Args:
-        collection_name (str): Collection adı
-        
-    Returns:
-        str: Dosya boyutu (MB cinsinden)
     """
     persist_directory = "./chroma_db"
     try:
-        collection_path = os.path.join(persist_directory, collection_name)
-        
-        if not os.path.exists(collection_path):
+        if not os.path.exists(persist_directory):
             return "0 MB"
         
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(collection_path):
+        for dirpath, dirnames, filenames in os.walk(persist_directory):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
                 total_size += os.path.getsize(filepath)
@@ -170,23 +157,3 @@ def get_vector_store_size(collection_name: str = "medical_qa"):
     except Exception as e:
         logger.error(f"Dosya boyutu hesaplanırken hata oluştu: {e}")
         return "Bilinmiyor"
-
-def backup_vector_store(backup_directory: str = "./chroma_db_backup"):
-    """
-    Vector store'u yedekler
-    
-    Args:
-        backup_directory (str): Yedek dizin
-    """
-    try:
-        import shutil
-        source_directory = "./chroma_db"
-        
-        if os.path.exists(source_directory):
-            shutil.copytree(source_directory, backup_directory)
-            logger.info(f"Vector store yedeklendi: {backup_directory}")
-        else:
-            logger.warning(f"Kaynak dizin mevcut değil: {source_directory}")
-            
-    except Exception as e:
-        logger.error(f"Yedekleme sırasında hata oluştu: {e}")
