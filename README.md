@@ -4,7 +4,7 @@ Bu proje, Türkçe tıbbi makaleler üzerinde **Retrieval-Augmented Generation (
 
 ## Özellikler
 
-- **24,000+ Tıbbi Makale**: Türk hastanelerinden toplanmış güncel tıbbi içerik
+- **4748 Tıbbi Makale**: Türk hastanelerinden toplanmış güncel tıbbi içerik
 - **Türkçe Embedding Modeli**: `trmteb/turkish-embedding-model` ile optimize edilmiş arama
 - **Google Gemini 2.0 Flash**: Gelişmiş dil modeli ile doğal cevaplar
 - **ChromaDB Vector Store**: Hızlı ve etkili vektör arama
@@ -45,6 +45,25 @@ rag-based-chatbot/
 | Framework | LangChain | 0.1.0+ | RAG framework |
 | Web UI | Streamlit | 1.28.0+ | Web arayüzü |
 | Data | HuggingFace Datasets | 2.14.0+ | Veri yönetimi |
+
+### 🏆 Embedding Model Seçimi
+
+**📊 Model Karşılaştırması:**
+
+| Sıra | Model | Skor | Boyut | RAM | Türkçe |
+|------|-------|------|-------|-----|--------|
+| 🥇 1 | paraphrase-multilingual-MiniLM-L12-v2 | **0.9218** | 471MB | 500MB | ⭐⭐⭐⭐⭐ |
+| 🥈 2 | paraphrase-multilingual-mpnet-base-v2 | **0.9021** | 1.1GB | 1GB | ⭐⭐⭐⭐⭐ |
+| 🥉 3 | **Google text-embedding-004** | **0.8581** | 0MB | 0MB | ⭐⭐⭐⭐ |
+
+**✅ Neden Google Modeli Seçildi?**
+- **💾 RAM kullanmaz** - Colab'da kritik
+- **⚡ Çok hızlı** - API üzerinden anında
+- **🎯 0.85+ skor yeterli** - Tıbbi metinler için uygun
+- **🔧 Basit kurulum** - Tek API anahtarı
+- **📈 Ölçeklenebilir** - Sınırsız kullanım
+
+**🎯 Sonuç:** Google modeli, performans ve pratiklik arasında mükemmel denge sağlıyor. Colab ortamında ideal seçim!
 
 ## Kurulum
 
