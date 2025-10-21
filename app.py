@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 st.set_page_config(
-    page_title="Tıbbi Chatbot",
+    page_title="Tıbbi Tarayıcı",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -25,7 +25,6 @@ st.set_page_config(
 def download_chroma_from_drive():
     """Google Drive'dan ChromaDB indir ve aç"""
     if not os.path.exists('./chroma_db'):
-        st.info("ChromaDB Google Drive'dan indiriliyor...")
         file_id = os.getenv('GOOGLE_DRIVE_FILE_ID')
         if not file_id:
             st.error("GOOGLE_DRIVE_FILE_ID bulunamadı!")
@@ -35,11 +34,16 @@ def download_chroma_from_drive():
             import gdown
             url = f"https://drive.google.com/uc?id={file_id}"
             output = "temp_chroma.zip"
+            progress_bar = st.progress(0)
+            status_text = st.empty()
             
-            st.info("Google Drive'dan indiriliyor...")
+            status_text.text("ChromaDB indiriliyor...")
+            progress_bar.progress(25)
+            
             gdown.download(url, output, quiet=False)
             
-            st.info("Zip dosyası indirildi, açılıyor...")
+            status_text.text("Zip açılıyor...")
+            progress_bar.progress(50)
             
             os.makedirs('./chroma_db', exist_ok=True)
             
@@ -47,7 +51,11 @@ def download_chroma_from_drive():
                 zip_ref.extractall('./chroma_db/')
             
             os.remove(output)
-            st.success("ChromaDB başarıyla yüklendi!")
+            
+            status_text.text("ChromaDB hazır!")
+            progress_bar.progress(100)
+            st.empty()
+            
             return True
             
         except Exception as e:
@@ -57,33 +65,26 @@ def download_chroma_from_drive():
     return True
 
 @st.cache_resource
-def load_embedding_model_cached():
-    """Embedding modelini cache'le"""
-    return load_embedding_model()
+def load_everything():
+    """Tüm sistemi bir kez yükle - cache'li"""
+    embedding_model = load_embedding_model()
 
-@st.cache_resource
-def load_vector_store():
-    """Vector store'u yükle"""
-    try:
-        if check_vector_store_exists():
-            logger.info("Mevcut vector store yükleniyor...")
-            embedding_model = load_embedding_model_cached()
-            return get_vector_store(embedding_model)
-        else:
-            st.error("Vector store bulunamadı! Lütfen önce vector store'u oluşturun.")
-            return None
-    except Exception as e:
-        logger.error(f"Vector store yüklenirken hata: {e}")
-        return None
+    if check_vector_store_exists():
+        vector_store = get_vector_store(embedding_model)
+    else:
+        st.error("Vector store bulunamadı!")
+        return None, None
+    
+    if not setup_gemini():
+        st.error("Gemini API kurulamadı!")
+        return None, None
+    
+    return embedding_model, vector_store
 
 def main():
     """Ana uygulama"""
-    st.title("Türkçe Tıbbi Chatbot")
+    st.title("Tıbbi Tarayıcı")
     st.markdown("Türk hastanelerinin tıbbi makalelerinden yararlanarak sorularınızı yanıtlar.")
-    
-    if not download_chroma_from_drive():
-        st.error("ChromaDB yüklenemedi!")
-        return
     
     with st.sidebar:
         st.header("Bilgi")
@@ -92,21 +93,15 @@ def main():
         sorularınızı yanıtlar. Sadece bilgilendirme amaçlıdır.
         """)
         
-        if st.button("Vector Store'u Yenile"):
+        if st.button("Sistemi Yenile"):
             st.cache_resource.clear()
             st.rerun()
     
-    with st.spinner("Sistem hazırlanıyor..."):
-        vector_store = load_vector_store()
+    with st.spinner("Sistem başlatılıyor..."):
+        embedding_model, vector_store = load_everything()
         
         if vector_store is None:
-            st.error("Vector store yüklenemedi. Lütfen sayfayı yenileyin.")
-            return
-        
-        if setup_gemini():
-            st.success("Sistem hazır!")
-        else:
-            st.error("Gemini API kurulamadı. Lütfen API key'inizi kontrol edin.")
+            st.error("Sistem yüklenemedi. Lütfen sayfayı yenileyin.")
             return
     
     st.header("Soru Sorun")
@@ -133,6 +128,11 @@ def main():
                     error_msg = f"Hata oluştu: {str(e)}"
                     st.error(error_msg)
                     st.session_state.messages.append({"role": "assistant", "content": error_msg})
+
+if not os.path.exists('./chroma_db'):
+    if not download_chroma_from_drive():
+        st.error("ChromaDB yüklenemedi!")
+        st.stop()
 
 if __name__ == "__main__":
     main()
