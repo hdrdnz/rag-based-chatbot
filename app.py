@@ -83,28 +83,86 @@ def load_everything():
 
 def main():
     """Ana uygulama"""
-    st.title("Tıbbi Tarayıcı")
-    st.markdown("Türk hastanelerinin tıbbi makalelerinden yararlanarak sorularınızı yanıtlar.")
     
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem 0;">
+        <h1 style="color: #1f77b4; font-size: 3rem; margin-bottom: 1rem;">Tıbbi Tarayıcı</h1>
+        <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+            Türk hastanelerinin tıbbi makalelerinden yararlanarak sorularınızı yanıtlar
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
+            <h3>2,000+ Makale</h3>
+            <p>Türkiyede hastanelerinin tıbbi makaleleri</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
+            <h3>AI Destekli</h3>
+            <p>Google Gemini ile güçlendirilmiş</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+   
     with st.sidebar:
-        st.header("Bilgi")
-        st.info("""
-        Bu chatbot Türk hastanelerinin tıbbi makalelerini analiz ederek 
-        sorularınızı yanıtlar. Sadece bilgilendirme amaçlıdır.
-        """)
+        st.markdown("""...""")
         
-        if st.button("Sistemi Yenile"):
+        if st.button("Sistemi Yenile", use_container_width=True):
             st.cache_resource.clear()
             st.rerun()
+        
+        st.markdown("### Örnek Sorular")
+        example_questions = [
+            "Migren ağrısı nasıl geçer?",
+            "Kalp krizi belirtileri nelerdir?",
+            "Grip aşısı ne zaman yaptırmalıyım?",
+            "Yüksek tansiyon nasıl kontrol edilir?",
+        ]
+        
+        for question in example_questions:
+            if st.button(question, key=f"example_{question}", use_container_width=True):
+                st.session_state.example_question = question
+                st.rerun()
     
     with st.spinner("Sistem başlatılıyor..."):
         embedding_model, vector_store = load_everything()
-        
+    
+
+    
         if vector_store is None:
             st.error("Sistem yüklenemedi. Lütfen sayfayı yenileyin.")
             return
     
     st.header("Soru Sorun")
+
+    if hasattr(st.session_state, 'example_question'):
+        prompt = st.session_state.example_question
+        delattr(st.session_state, 'example_question')
+        
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        with st.chat_message("assistant"):
+            with st.spinner("Düşünüyorum..."):
+                try:
+                    answer = rag_query(vector_store, prompt)
+                    st.markdown(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                except Exception as e:
+                    error_msg = f"Hata oluştu: {str(e)}"
+                    st.error(error_msg)
+                    st.session_state.messages.append({"role": "assistant", "content": error_msg})
     
     if "messages" not in st.session_state:
         st.session_state.messages = []
