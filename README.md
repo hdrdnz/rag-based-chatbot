@@ -4,7 +4,7 @@ Bu proje, Türkçe tıbbi makaleler üzerinde **Retrieval-Augmented Generation (
 
 ## Özellikler
 
-- **4748 Tıbbi Makale**: Türk hastanelerinden toplanmış güncel tıbbi içerik
+- **4000+ Tıbbi Makale**: Türk hastanelerinden toplanmış güncel tıbbi içerik
 - **Türkçe Embedding Modeli**: `trmteb/turkish-embedding-model` ile optimize edilmiş arama
 - **Google Gemini 2.0 Flash**: Gelişmiş dil modeli ile doğal cevaplar
 - **ChromaDB Vector Store**: Hızlı ve etkili vektör arama
@@ -15,7 +15,7 @@ Bu proje, Türkçe tıbbi makaleler üzerinde **Retrieval-Augmented Generation (
 ```
 rag-based-chatbot/
 ├── rag_env/                 # Python sanal ortamı
-├── app.py                   # Ana uygulama (konsol)
+├── app.py                   # Ana uygulama
 ├── data_processing.py       # Veri yükleme ve işleme
 ├── embedding_model.py       # Türkçe embedding modeli
 ├── vector_store.py          # ChromaDB vector store yönetimi
@@ -30,7 +30,7 @@ rag-based-chatbot/
 
 ### Veri İşleme Pipeline
 
-1. **Veri Yükleme**: HuggingFace'ten `umutertugrul/turkish-hospital-medical-articles` veri seti
+1. **Veri Yükleme**: HuggingFace'ten [`umutertugrul/turkish-hospital-medical-articles`](https://huggingface.co/datasets/umutertugrul/turkish-hospital-medical-articles) veri seti
 2. **Document Oluşturma**: Makaleler LangChain Document formatına dönüştürülür
 3. **Veri Temizleme**: Boş ve kısa içerikler filtrelenir
 4. **Kalite Kontrolü**: %98.6 başarı oranı ile işleme
@@ -45,25 +45,6 @@ rag-based-chatbot/
 | Framework | LangChain | 0.1.0+ | RAG framework |
 | Web UI | Streamlit | 1.28.0+ | Web arayüzü |
 | Data | HuggingFace Datasets | 2.14.0+ | Veri yönetimi |
-
-### 🏆 Embedding Model Seçimi
-
-**📊 Model Karşılaştırması:**
-
-| Sıra | Model | Skor | Boyut | RAM | Türkçe |
-|------|-------|------|-------|-----|--------|
-| 🥇 1 | paraphrase-multilingual-MiniLM-L12-v2 | **0.9218** | 471MB | 500MB | ⭐⭐⭐⭐⭐ |
-| 🥈 2 | paraphrase-multilingual-mpnet-base-v2 | **0.9021** | 1.1GB | 1GB | ⭐⭐⭐⭐⭐ |
-| 🥉 3 | **Google text-embedding-004** | **0.8581** | 0MB | 0MB | ⭐⭐⭐⭐ |
-
-**✅ Neden Google Modeli Seçildi?**
-- **💾 RAM kullanmaz** - Colab'da kritik
-- **⚡ Çok hızlı** - API üzerinden anında
-- **🎯 0.85+ skor yeterli** - Tıbbi metinler için uygun
-- **🔧 Basit kurulum** - Tek API anahtarı
-- **📈 Ölçeklenebilir** - Sınırsız kullanım
-
-**🎯 Sonuç:** Google modeli, performans ve pratiklik arasında mükemmel denge sağlıyor. Colab ortamında ideal seçim!
 
 ## Kurulum
 
@@ -193,76 +174,17 @@ Web arayüzü `http://localhost:8501` adresinde açılır.
    main()
    ```
 
-### 4. Ngrok ile Web Arayüzünü Paylaşma
-
-**Ngrok ile Dışarıya Açma:**
-
-1. **Ngrok'u Yükleyin:**
-   ```python
-   # Colab'da çalıştırın
-   !pip install pyngrok
-   ```
-
-2. **Streamlit Uygulamasını Başlatın:**
-   ```python
-   # Colab'da çalıştırın
-   import subprocess
-   import threading
-   from pyngrok import ngrok
-   
-   def run_streamlit():
-       subprocess.run([
-           "streamlit", "run", "app.py", 
-           "--server.port", "8501",
-           "--server.address", "0.0.0.0",
-           "--server.headless", "true"
-       ])
-   
-   # Streamlit'i arka planda başlat
-   streamlit_thread = threading.Thread(target=run_streamlit)
-   streamlit_thread.daemon = True
-   streamlit_thread.start()
-   
-   # Ngrok tüneli oluştur
-   public_url = ngrok.connect(8501)
-   print(f"Web arayüzü: {public_url}")
-   ```
-
-3. **Ngrok Token Ayarlayın (Opsiyonel):**
-   ```python
-   # Colab'da çalıştırın
-   from pyngrok import ngrok
-   
-   # Ngrok token'ınızı ayarlayın (ücretsiz hesap için)
-   ngrok.set_auth_token("your_ngrok_token_here")
-   
-   # Tünel oluştur
-   public_url = ngrok.connect(8501)
-   print(f"Paylaşılabilir link: {public_url}")
-   ```
-
-**Ngrok Avantajları:**
-- **Global Erişim**: Dünyanın her yerinden erişilebilir
-- **Mobil Uyumlu**: Telefon ve tabletten de kullanılabilir
-- **HTTPS**: Güvenli bağlantı
-- **Analytics**: Ziyaretçi istatistikleri
-- **Ücretsiz**: Temel kullanım için ücretsiz
-
-**Önemli Notlar:**
-- Ngrok tüneli Colab oturumu kapandığında kapanır
-- Ücretsiz versiyonda 8 saat süre sınırı vardır
-- Her yeniden başlatmada yeni URL oluşur
 
 ## Örnek Kullanım
 
-### Tıbbi Sorular
+**Tıbbi Tarayıcı** ile test edebileceğiniz örnek sorular:
 
-**Soru:** "Migren ağrısı nasıl geçer?"
+• **"Migren ağrısı nasıl geçer?"**
 
-**Cevap:** "Migren ağrısı için öncelikle karanlık ve sessiz bir ortamda dinlenmek önemlidir. Soğuk kompres uygulayabilir, bol su içebilirsiniz. Stres faktörlerinden kaçınmak ve düzenli uyku saatleri önemlidir. Şiddetli ağrılarda doktor kontrolü gerekebilir."
+• **"Kalp krizi belirtileri nelerdir?"**
 
----
+• **"Grip aşısı ne zaman yaptırmalıyım?"**
 
-**Soru:** "Grip aşısı ne zaman yaptırmalıyım?"
+• **"Yüksek tansiyon nasıl kontrol edilir?"**
 
-**Cevap:** "Grip aşısı genellikle sonbahar aylarında (Eylül-Kasım) yaptırılması önerilir. Aşı, grip mevsimi başlamadan önce yapılmalıdır. Risk gruplarındaki kişiler için özellikle önemlidir."
+• **"Baş ağrısı çeşitleri nelerdir?"**

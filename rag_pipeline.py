@@ -105,7 +105,7 @@ YANIT KURALLARI:
 5. Kısa ve öz cevap ver
 7. Yanıtını Türkçe ver
 8.Hastalık dışında sorular gelirse "Ben sadece tıbbi sorulara cevap verebilirim" diye cevap ver.
-9. Eğer yeterli bilgi yoksa "Bu konuda yeterli bilgi bulamadım" de
+9. Eğer yeterli bilgi yoksa "Bu konuda yeterli bilgi bulamadım" cevabını ver.
 
 YANIT:"""
 
@@ -169,29 +169,3 @@ def rag_query(vector_store, query: str, k: int = 5):
     except Exception as e:
         logger.error(f"RAG Pipeline sırasında hata oluştu: {e}")
         return "Üzgünüm, bir hata oluştu. Lütfen daha sonra tekrar deneyin."
-
-def test_rag_pipeline(vector_store):
-    """
-    RAG Pipeline'ı test eder
-    
-    Args:
-        vector_store: ChromaDB vector store
-    """
-    print("RAG PIPELINE TESTİ")
-    print("=" * 50)
-    
-    test_queries = [
-        "Baş ağrısı için ne yapmalıyım?",
-        "Kalp çarpıntısı normal mi?",
-        "Grip aşısı ne zaman yaptırmalıyım?",
-        "Migren ağrısı nasıl geçer?",
-        "Tansiyon yüksekliği tehlikeli mi?"
-    ]
-    
-    for i, query in enumerate(test_queries, 1):
-        print(f"\nTest {i}: {query}")
-        print("-" * 40)
-        
-        answer = rag_query(vector_store, query, k=3)
-        print(f"Cevap: {answer}")
-        print()

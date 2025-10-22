@@ -111,15 +111,17 @@ def main():
             <p>Google Gemini ile güçlendirilmiş</p>
         </div>
         """, unsafe_allow_html=True)
+    
+    with st.spinner("Sistem başlatılıyor..."):
+        embedding_model, vector_store = load_everything()
+    
 
-
-   
+    
+        if vector_store is None:
+            st.error("Sistem yüklenemedi. Lütfen sayfayı yenileyin.")
+            return
+    
     with st.sidebar:
-        st.markdown("""...""")
-        
-        if st.button("Sistemi Yenile", use_container_width=True):
-            st.cache_resource.clear()
-            st.rerun()
         
         st.markdown("### Örnek Sorular")
         example_questions = [
@@ -131,39 +133,21 @@ def main():
         
         for question in example_questions:
             if st.button(question, key=f"example_{question}", use_container_width=True):
-                st.session_state.example_question = question
+                st.session_state.messages.append({"role": "user", "content": question})
+                
+                with st.spinner("Düşünüyorum..."):
+                    try:
+                        answer = rag_query(vector_store, question)  # vector_store gerekli!
+                        st.session_state.messages.append({"role": "assistant", "content": answer})
+                    except Exception as e:
+                        error_msg = f"Hata oluştu: {str(e)}"
+                        st.session_state.messages.append({"role": "assistant", "content": error_msg})
+                
                 st.rerun()
-    
-    with st.spinner("Sistem başlatılıyor..."):
-        embedding_model, vector_store = load_everything()
-    
-
-    
-        if vector_store is None:
-            st.error("Sistem yüklenemedi. Lütfen sayfayı yenileyin.")
-            return
     
     st.header("Soru Sorun")
 
-    if hasattr(st.session_state, 'example_question'):
-        prompt = st.session_state.example_question
-        delattr(st.session_state, 'example_question')
-        
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        with st.chat_message("assistant"):
-            with st.spinner("Düşünüyorum..."):
-                try:
-                    answer = rag_query(vector_store, prompt)
-                    st.markdown(answer)
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                except Exception as e:
-                    error_msg = f"Hata oluştu: {str(e)}"
-                    st.error(error_msg)
-                    st.session_state.messages.append({"role": "assistant", "content": error_msg})
-    
+ 
     if "messages" not in st.session_state:
         st.session_state.messages = []
     

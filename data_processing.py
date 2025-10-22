@@ -116,7 +116,7 @@ def explore_dataset(dataset):
         logger.error(f"Veri !seti keşfedilirken hata: {e}")
         print(f"Hata: {e}")
 
-def create_documents(dataset, max_samples=None):
+def create_documents(dataset, max_samples=2000):
     """
     Yeni veri setinden LangChain Document'ları oluşturur
     
@@ -150,17 +150,14 @@ def create_documents(dataset, max_samples=None):
             for i in range(hospital_articles):
                 article = hospital_data[i]
                 
-                # İLK BAŞTA KONTROL ET - ÇOK DAHA MANTIKLI!
                 text_content = article.get('text', '')
                 title = article.get('title', f'Başlıksız {i+1}')
                 
-                # Boş text kontrolü - İLK BAŞTA!
                 if not text_content or text_content is None or text_content.strip() == '':
                     logger.warning(f"Boş içerik atlandı: {title}")
                     skipped_articles += 1
                     continue
                 
-                # Kısa text kontrolü - İLK BAŞTA!
                 if len(text_content.strip()) < 50:
                     logger.warning(f"Çok kısa içerik atlandı: {title} (Uzunluk: {len(text_content)})")
                     skipped_articles += 1

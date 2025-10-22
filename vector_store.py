@@ -72,7 +72,6 @@ def check_vector_store_exists(collection_name: str = "medical"):
             logger.info(f"Vector store mevcut değil: {base_path}")
             return False
         
-        # Sadece chroma.sqlite3 dosyasını kontrol et
         required_files = ["chroma.sqlite3"]
         for file in required_files:
             file_path = os.path.join(base_path, file)
@@ -110,31 +109,6 @@ def search_similar_documents(vector_store, query: str, k: int = 5):
     except Exception as e:
         logger.error(f"Document arama sırasında hata oluştu: {e}")
         return []
-
-def get_collection_info(vector_store):
-    """
-    Collection hakkında bilgi döndürür
-    
-    Args:
-        vector_store: ChromaDB vector store
-        
-    Returns:
-        Dict: Collection bilgileri
-    """
-    try:
-        collection = vector_store._collection
-        count = collection.count()
-        
-        info = {
-            "collection_name": collection.name,
-            "document_count": count,
-            "persist_directory": "./chroma_db"
-        }
-        
-        return info
-    except Exception as e:
-        logger.error(f"Collection bilgisi alınırken hata oluştu: {e}")
-        return {"error": str(e)}
 
 def get_vector_store_size(collection_name: str = "medical"):
     """

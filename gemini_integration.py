@@ -17,7 +17,7 @@ def setup_gemini():
         bool: Başarılı mı?
     """
     try :
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = os.getenv('GOOGLE_API_KEY')
         if not api_key:
             return False
         
